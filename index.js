@@ -237,19 +237,22 @@ exports.connect = function(config, intern, callback) {
     host = host.split(",")
   }
 
-  // TODO: See if we need connectionParam or can directly be driven from cofig
-  var connectionParam = {}
+  // TODO: See if we need connectionParam or can directly be driven from config
+  var connectionParam = {};
+  var clientConfig = {};
   if(config.user !== undefined && config.password !== undefined) {
-    connectionParam.user = config.user,
+    clientConfig.authProvider = new cassandra.auth.PlainTextAuthProvider(config.user, config.password);
+    connectionParam.user = config.user;
     connectionParam.password = config.password
   }
+
   connectionParam.hostname = host;
   connectionParam.keyspace = config.database;
 
-  db = config.db || new cassandra.Client({
-    contactPoints: connectionParam.hostname,
-    keyspace: connectionParam.keyspace
-  });
+  clientConfig.contactPoints = host;
+  clientConfig.keyspace = config.database;
+
+  db = config.db || new cassandra.Client(clientConfig);
 
   callback(null, new CqlshDriver(db, connectionParam));
 };
